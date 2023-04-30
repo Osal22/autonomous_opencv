@@ -1,4 +1,0 @@
-source;share/laserscan_localization/local_setup.bash
-source;share/laserscan_localization/local_setup.dsv
-source;share/laserscan_localization/local_setup.sh
-source;share/laserscan_localization/local_setup.zsh
