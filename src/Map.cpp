@@ -2,7 +2,7 @@
 
 Map::Map()
 {
-
+    
 }
 
 void Map::hello()
@@ -117,6 +117,7 @@ std::vector<MapNode *> Map::find() {
 
         std::cout << "Target node is unreachable." <<std::endl;
         draw=false;
+        return path_prev;
     } else {
         MapNode *_node = reversedPtr;
         while (_node->parent != 0) {
@@ -124,6 +125,7 @@ std::vector<MapNode *> Map::find() {
             _node = _node->parent;
         }
         reverse(path.begin(), path.end());
+        path_prev=path;
     }
     return path;
 }

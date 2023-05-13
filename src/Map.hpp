@@ -52,7 +52,7 @@ public:
     inline int diagonal_distance(MapNode* node1, MapNode* node2);
     void make_nodes();
     std::vector<MapNode *> get_path();
-        
+    std::vector<MapNode *> path_prev;
 
    
 };

@@ -19,7 +19,6 @@
 #include <sstream>
 #include <bits/stdc++.h>
 #include <time.h>
-#include <ctime>
 #include <stdexcept>
 #include <numeric>
 #include <algorithm>
@@ -34,6 +33,9 @@
 #include "MapSize.hpp"
 #include "Map.hpp"
 #include <nav_msgs/msg/occupancy_grid.hpp>
+#include <ctime>
+#include <unistd.h>
+#include <sys/time.h>
 
 
 using std::placeholders::_1;
@@ -50,6 +52,11 @@ struct point_coor
 {
    float x;
    float y;
+   void print_p()
+   {
+    std::cout<<" x:= "<<x<<" y:= "<<y;
+   }
+     
 };
 
 struct velocity_vector
@@ -136,20 +143,29 @@ private:
   // void set_path(std::vector<MapNode *>_path);
   int angle_offset_value;
   int get_angle_offest();
-// driver section
-geometry_msgs::msg::Twist controller;
-void timer_callback();
-void set_path(std::vector<MapNode *>_path);
-double angleBetweenLines(double x1a, double y1a, double x1b, double y1b, double x2a, double y2a, double x2b, double y2b);
+  // driver section
+  geometry_msgs::msg::Twist controller;
+  void timer_callback();
+  void set_path(std::vector<MapNode *>_path);
+  double angleBetweenLines(double x1a, double y1a, double x1b, double y1b, double x2a, double y2a, double x2b, double y2b);
 
-nav_msgs::msg::OccupancyGrid matToOccupancyGrid(const cv::Mat& mat);
-std::deque<point_coor> update_path;
+  nav_msgs::msg::OccupancyGrid matToOccupancyGrid(const cv::Mat& mat);
+  std::deque<point_coor> update_path;
 
-// imu section
-tf2::Quaternion quat_tf;
-std::vector<cv::Point> points_holder;
-bool flag_points_holder=true;
+  // imu section
+  tf2::Quaternion quat_tf;
+  std::vector<cv::Point> points_holder;
+  bool flag_points_holder=true;
+  nav_msgs::msg::Odometry::SharedPtr prev_odom_data;
+  void compute_velocty_from_odom(nav_msgs::msg::Odometry::SharedPtr odom_data);
+  uint64_t time_prev,time_now;
+  uint64_t return_time_milli();
+  bool prev_odom_flag=false;
+  double delta_t=0.0;
+  
 
+  std::deque<point_coor> smooth_path();
+  point_coor smooth( point_coor x0,point_coor x1 ,float t);
 
 };
   
