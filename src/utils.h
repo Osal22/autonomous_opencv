@@ -10,8 +10,8 @@ const int NODE_TYPE_OBSTACLE = 1;
 const int NODE_TYPE_START = 2;
 const int NODE_TYPE_END = 3;
 
-const int G_DIRECT = 10;
-const int G_SKEW = 14;
+const int G_DIRECT = 100;
+const int G_SKEW = 140;
 
 
 const std::string M50_1[] = {

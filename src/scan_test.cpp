@@ -27,7 +27,7 @@
 #include "tf2_ros/buffer.h"
 #include <thread>
 #include <nav_msgs/msg/odometry.hpp>
-  int resolution=70;
+  int resolution=395;
   double angle_offset_value=0;
   double pi = 3.14159265359;
   float inf = std::numeric_limits<float>::infinity();
@@ -38,8 +38,8 @@
   int width;
   int height;
 };
-
-map_size _map_size={900,900};
+cv::Mat map=cv::imread("/home/goalbytes/_dev/laserscan_localization/saved_images/map.pgm");
+map_size _map_size={112,103};
 nav_msgs::msg::Odometry::SharedPtr _odom_data;
 struct point_coor
 {
@@ -106,8 +106,8 @@ std::vector <point_coor> compute_coor(const sensor_msgs::msg::LaserScan::SharedP
         auto angle_raians=angle_ff * (pi / 180);
         double x = range * std::cos(angle+angle_raians);
         double y = range * std::sin(angle+angle_raians);
-        _points.x=x;
-        _points.y=y;
+        _points.x=x*0.049;
+        _points.y=y*0.049;
         _coor_data.push_back(_points);
         }
   }
@@ -115,21 +115,24 @@ std::vector <point_coor> compute_coor(const sensor_msgs::msg::LaserScan::SharedP
   }
 
 
-cv::Point convert_to_opencv_points(float x, float y)
+cv::Point2f convert_to_opencv_points(float x, float y)
 {
   
-   return cv::Point((-y*resolution)+int(_map_size.height/2),(-x*resolution)+int(_map_size.width/2));
+   return cv::Point(((-y*resolution)+int(_map_size.height/2)),((-x*resolution)+int(_map_size.width/2)));
 
 }
 void laserScanCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg) {
-    auto map = cv::Mat(900,900, CV_8UC3, cv::Scalar(255,255,255));
+    // auto map = cv::Mat(900,900, CV_8UC3, cv::Scalar(255,255,255));
+    map=cv::imread("/home/goalbytes/_dev/laserscan_localization/saved_images/map.pgm");
     auto points=compute_coor(msg);
     auto _odom_current_position =get_delta_pose();
 
     for (auto itr:points){
-      map.at<cv::Vec3b>(convert_to_opencv_points(itr.x,itr.y)) = color;
-    //   map.at<cv::Vec3b>(convert_to_opencv_points(itr.x+_odom_current_position->pose.pose.position.x,itr.y+_odom_current_position->pose.pose.position.y)) = color;
-      
+      // if(itr.x <_map_size.height && itr.y <_map_size.width)
+      // map.at<cv::Vec3b>(convert_to_opencv_points(itr.x,itr.y)) = color;
+      map.at<cv::Vec3b>(convert_to_opencv_points(itr.x+_odom_current_position->pose.pose.position.x*0.049,itr.y+_odom_current_position->pose.pose.position.y*0.049)) = color;
+      // std::cout<<"x:= "<<itr.x<<" y:= "<<itr.y<<std::endl;
+
       }
     cv::namedWindow("map", cv::WINDOW_NORMAL);
     cv::imshow("map",map);

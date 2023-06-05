@@ -53,7 +53,8 @@ public:
     void make_nodes();
     std::vector<MapNode *> get_path();
     std::vector<MapNode *> path_prev;
-
+    std::vector<cv::Point>obstacle_vec;
+    std::vector<cv::Point> get_obstacle_vec();
    
 };
 #endif //MAP_HPP

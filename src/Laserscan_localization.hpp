@@ -129,6 +129,8 @@ private:
 
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr publisher_;
   rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr publisher_map;
+  // rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr publisher_map;
+
   void save_image(const cv::Mat &_mat);
   std::string image_save_path="/home/goalbytes/_dev/laserscan_localization/saved_images/";
 
@@ -163,9 +165,12 @@ private:
   bool prev_odom_flag=false;
   double delta_t=0.0;
   
-
+  bool mapping=true;
   std::deque<point_coor> smooth_path();
   point_coor smooth( point_coor x0,point_coor x1 ,float t);
+  void _set_obstacle_vec(std::vector<cv::Point>);
+  std::vector<cv::Point> _get_obstacle_vec();
+  std::vector<cv::Point> obstacles;
 
 };
   

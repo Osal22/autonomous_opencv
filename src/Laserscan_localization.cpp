@@ -26,8 +26,14 @@ cv::Vec3b  end_color={0,0,255};
 cv::Vec3b  start_color={255,0,0};
 bool start_planning=false,start_robot=false,first_image=true;
 bool done_planning=false;
-cv::Mat map = cv::Mat(900,900, CV_8UC3, cv::Scalar(255,255,255));
-cv::Mat map_for_planning = cv::Mat(900,900, CV_8UC3, cv::Scalar(255,255,255));
+cv::Mat map=cv::imread("/home/goalbytes/_dev/laserscan_localization/saved_images/map_house1.jpg");
+  // cv::Mat map = cv::Mat(900,900, CV_8UC3, cv::Scalar(255,255,255));
+
+
+
+
+// map=imread("./saved_images/map.pgm");
+cv::Mat map_for_planning=map.clone();
 
 geometry_msgs::msg::Twist velocity;
 cv::Point target_point;
@@ -167,6 +173,7 @@ std::deque<point_coor> Laserscan_localization::plan_path( cv::Mat &_map,const cv
     _map_planner->mapData = std::vector<MapNode>( _map_planner->mapSize.size);
     std::cout << "MapSize(" <<  _map_planner->mapSize.width << ", " <<  _map_planner->mapSize.height << ", " <<  _map_planner->mapSize.size << ")" << std::endl;
     _map_planner->make_nodes();
+    _set_obstacle_vec(_map_planner->get_obstacle_vec());
     std::cout << "startNode=(" << _map_planner->startNode->x << ", " << _map_planner->startNode->y << ")" << std::endl;
     std::cout << "endNode=(" << _map_planner->targetNode->x << ", " << _map_planner->targetNode->y << ")" << std::endl;
 
@@ -275,7 +282,7 @@ void Laserscan_localization::calulate_points(const sensor_msgs::msg::LaserScan::
       for (auto itr:points)
       {
       map.at<cv::Vec3b>(convert_to_opencv_points(itr.x+_odom_current_position->pose.pose.position.x,itr.y+_odom_current_position->pose.pose.position.y)) = color;
-      cv::circle(map_for_planning,convert_to_opencv_points(itr.x+_odom_current_position->pose.pose.position.x,itr.y+_odom_current_position->pose.pose.position.y),10,cv::Scalar(0, 0, 0),6);
+      cv::circle(map_for_planning,convert_to_opencv_points(itr.x+_odom_current_position->pose.pose.position.x,itr.y+_odom_current_position->pose.pose.position.y),8,cv::Scalar(0, 0, 0),6);
       }
 
 
@@ -295,14 +302,14 @@ void Laserscan_localization::calulate_points(const sensor_msgs::msg::LaserScan::
     // y component = _dist * sin(theta);
         auto angle_radians=angle_offset * (pi / 180);
 
-        auto x_component_f= 11*cos(angle_radians);
-        auto y_component_f= 11*sin(angle_radians);
+        auto x_component_f= 9*cos(angle_radians);
+        auto y_component_f= 9*sin(angle_radians);
 
-        auto x_component_l= 7*cos(angle_radians);
-        auto y_component_l= 11*sin(angle_radians);
+        auto x_component_l= 5*cos(angle_radians);
+        auto y_component_l= 9*sin(angle_radians);
 
-        auto x_component_r= 7*cos(angle_radians);
-        auto y_component_r= 11*sin(angle_radians);
+        auto x_component_r= 5*cos(angle_radians);
+        auto y_component_r= 9*sin(angle_radians);
 
 
         auto current_poi_f=cv::Point{current_position.x-int(y_component_f),(current_position.y-int(x_component_f))};
@@ -313,17 +320,17 @@ void Laserscan_localization::calulate_points(const sensor_msgs::msg::LaserScan::
       position_points_holder.push_back(current_position);
 
 
-      // cv::line(map,current_position,cv::Point(target_vel_vec.x,target_vel_vec.y),cv::Scalar(0, 255, 0),1,cv::LINE_8);
       cv::line(map,current_position,current_poi_f,cv::Scalar(255, 0, 0),1,cv::LINE_8);
       cv::line(map,current_position,current_poi_l,cv::Scalar(255, 0, 0),1,cv::LINE_8);
       cv::line(map,current_position,current_poi_r,cv::Scalar(255, 0, 0),1,cv::LINE_8);
       cv::line(map,current_poi_f,current_poi_l,cv::Scalar(255, 0, 0),1,cv::LINE_8);
       cv::line(map,current_poi_f,current_poi_r,cv::Scalar(255, 0, 0),1,cv::LINE_8);
+      // if(target_point.x!=0 && target_point.y!=0)  
+      // cv::line(map,current_poi_f,target_point,cv::Scalar(255, 0, 0),1,cv::LINE_8);
 
 
 
-
-      if(position_points_holder.size()>10)
+      if(position_points_holder.size()>200 )
       {
         position_points_holder.clear();
       }
@@ -349,10 +356,11 @@ void Laserscan_localization::calulate_points(const sensor_msgs::msg::LaserScan::
     // std::cout << "The system clock start " << std::ctime(&t_c)<<std::endl;
     
     update_path=plan_path(map_for_planning,current_poi_f,target_point);
-    auto smoothed_path_vec=smooth_path();
     if(_map_planner->draw==true)
     {
-    planned_path=update_path;
+    auto smoothed_path_vec=smooth_path();
+
+    planned_path=smoothed_path_vec;
     }
     
     // auto last_elem=planned_path[planned_path.size()-10];
@@ -366,15 +374,15 @@ void Laserscan_localization::calulate_points(const sensor_msgs::msg::LaserScan::
     }
     else
     {
+  
 
-
-    if(planned_path.size()>20)
+    if(planned_path.size()>100)
     {
         for(auto itr:planned_path)
         {
          map.at<cv::Vec3b>(cv::Point(int(itr.x),int(itr.y))) = path_color;
         }
-      auto target_goal=planned_path[10];
+      auto target_goal=planned_path[100];
 
       // map.at<cv::Vec3b>(cv::Point(int(target_goal.x),int(target_goal.y))) = target_color;
       cv::circle(map,cv::Point(int(target_goal.x),int(target_goal.y)),1,target_color,2);
@@ -422,22 +430,33 @@ void Laserscan_localization::calulate_points(const sensor_msgs::msg::LaserScan::
       cv::circle(map,cv::Point(target_vel_vec.x,target_vel_vec.y),3,cv::Scalar(0, 0, 255),1);
       // std::cout<<current_vel_vec.x<<" "<<current_vel_vec.y<<" "<<current_vel_vec.angle<<std::endl;
       // current_vel_vec.print();
-      _twist.linear.x=abs(-current_vel_vec.y);
-      _twist.linear.y=-current_vel_vec.x;
-      _twist.angular.z=(current_vel_vec.angle);
-      // std::cout<<"x:= "<<_twist.linear.x<<" z:= "<<_twist.angular.z<<std::endl;
 
+      _twist.linear.x=(-current_vel_vec.y);
+      _twist.linear.y=-current_vel_vec.x;
+
+      _twist.angular.z=(current_vel_vec.angle)*1.5;
+      // std::cout<<"x:= "<<_twist.linear.x<<" z:= "<<_twist.angular.z<<std::endl;
 
     if(start_robot)
     {
       _twist.linear.y=0;
       if(_twist.linear.x<0.1)
       {
-        _twist.linear.x=0.1;
+        _twist.linear.x=+_twist.linear.x+0.2;
       }
       if(_twist.linear.x>0.3)
       {
         _twist.linear.x=0.3;
+      }
+      if(angle_sec>0.1 || angle_sec<-0.1)
+      {
+        std::cout<<"error angle:= "<<angle_sec<<std::endl;
+        _twist.angular.z=current_vel_vec.angle*2;
+        if(_twist.angular.z>1.0)
+        {
+          _twist.angular.z=1.0;
+        }
+        _twist.linear.x=0.05;
       }
       publisher_->publish(_twist);
 
@@ -454,7 +473,7 @@ void Laserscan_localization::calulate_points(const sensor_msgs::msg::LaserScan::
       if(near_point_dist<3.5)
       {
         // std::remove(planned_path.begin(),planned_path.begin()+10,target_goal);
-        for(int i=0;i<10;i++)
+        for(int i=0;i<99;i++)
         {
         planned_path.pop_front();
         }
@@ -492,11 +511,20 @@ void Laserscan_localization::calulate_points(const sensor_msgs::msg::LaserScan::
         save_csv_data(_scan);
 
       }
+       if(key_vlaue=='m')
+	    {
+        mapping=true;
+
+      }
     // cv::cvtColor(map, map, cv::COLOR_BGR2GRAY);
 
     // matToOccupancyGrid(map_for_planning);
-    map_for_planning = cv::Mat(900,900, CV_8UC3, cv::Scalar(255,255,255));
-    map = cv::Mat(900,900, CV_8UC3, cv::Scalar(255,255,255));
+
+    map=cv::imread("/home/goalbytes/_dev/laserscan_localization/saved_images/map_house1.jpg");
+
+    // map = cv::Mat(900,900, CV_8UC3, cv::Scalar(255,255,255));
+    map_for_planning=map.clone();
+
 
 
 
@@ -814,36 +842,16 @@ std::deque<point_coor> Laserscan_localization::smooth_path()
   int i=0;
   point_coor start_coor,end_coor;
   std::deque<point_coor> smoothed_path;
-  // for(int i=0;i<update_path.size();i++)
-  // {
+  if(update_path.size()>10)
+  {
+  for(int i=0;i<update_path.size()-4;i++)
+  {
     
     
-  //   auto x0= update_path[i];
-  //   auto x1= update_path[i+2];
-  //   auto x2= update_path[i+4];
-  //   auto x3= update_path[i+10];
-
-  //   for(float i=0;i<1.001;i=i+0.01)
-  //   {
-  //   auto bezie_a=smooth(x0,x1,i);
-  //   auto bezie_b=smooth(x1,x2,i);
-  //   auto bezie_c=smooth(x2,x3,i);
-
-  //   auto bezie_quad_a=smooth(bezie_a,bezie_b,i);
-  //   auto bezie_quad_b=smooth(bezie_b,bezie_c,i);
-  //   smoothed_path.push_back(smooth(bezie_quad_a,bezie_quad_b,i));
-
-  //   }
-
-  // } 
-
-
-    
-    int _size=update_path.size();
-    auto x0= update_path[0];
-    auto x1= update_path[(abs(_size/2))];
-    auto x2= update_path[abs(_size/1.5)];
-    auto x3= update_path[update_path.size()];
+    auto x0= update_path[i];
+    auto x1= update_path[i+1];
+    auto x2= update_path[i+2];
+    auto x3= update_path[i+3];
 
     for(float i=0;i<1.001;i=i+0.01)
     {
@@ -856,6 +864,33 @@ std::deque<point_coor> Laserscan_localization::smooth_path()
     smoothed_path.push_back(smooth(bezie_quad_a,bezie_quad_b,i));
 
     }
+
+  } 
+  }
+  else
+  {
+    return  update_path;
+  }
+
+
+    
+    // int _size=update_path.size();
+    // auto x0= update_path[0];
+    // auto x1= update_path[(abs(_size/2))];
+    // auto x2= update_path[abs(_size/1.5)];
+    // auto x3= update_path[update_path.size()];
+
+    // for(float i=0;i<1.001;i=i+0.01)
+    // {
+    // auto bezie_a=smooth(x0,x1,i);
+    // auto bezie_b=smooth(x1,x2,i);
+    // auto bezie_c=smooth(x2,x3,i);
+
+    // auto bezie_quad_a=smooth(bezie_a,bezie_b,i);
+    // auto bezie_quad_b=smooth(bezie_b,bezie_c,i);
+    // smoothed_path.push_back(smooth(bezie_quad_a,bezie_quad_b,i));
+
+    // }
 
   
   return smoothed_path;
@@ -871,3 +906,12 @@ return _point;
 }
 
 
+void Laserscan_localization::_set_obstacle_vec(std::vector<cv::Point> _vec)
+{
+  obstacles=_vec;
+}
+
+std::vector<cv::Point> Laserscan_localization::_get_obstacle_vec()
+{
+  return obstacles;
+}

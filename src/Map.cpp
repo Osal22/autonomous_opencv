@@ -162,6 +162,8 @@ inline int Map::manhattan_distance(MapNode* node1, MapNode* node2){
             else if (map_1.at<cv::Vec3b>(y, x) == cv::Vec3b(0, 0, 0)) 
             {
                  mapData[y *  mapSize.width + x] = MapNode(x, y, NODE_TYPE_OBSTACLE);
+                 obstacle_vec.push_back(cv::Point(x,y));
+
             } 
             else if (map_1.at<cv::Vec3b>(y, x) == cv::Vec3b(255, 0, 0)) 
             {
@@ -190,4 +192,10 @@ inline int Map::manhattan_distance(MapNode* node1, MapNode* node2){
     std::vector<MapNode *> Map::get_path()
     {
         return find();
+    }
+
+
+    std::vector<cv::Point> Map::get_obstacle_vec()
+    {
+        return obstacle_vec;
     }
